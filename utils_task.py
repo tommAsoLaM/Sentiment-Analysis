@@ -41,79 +41,53 @@ def accuracy_score(groundTruth, prediction):
     return right / total if total > 0 else 0.0
 
 def precision_score(groundTruth, prediction):
-    # Helper function to check if prediction is correct (using relaxed matching)
-    def is_correct(gScore, pScore):
-        # Exact matches
-        if gScore == pScore:
-            return True
-        # Relaxed "Positive" Matches
-        if (gScore == 4 and pScore == 5) or (gScore == 5 and pScore == 4):
-            return True
-        # Relaxed "Negative" Matches
-        if (gScore == 1 and pScore == 2) or (gScore == 2 and pScore == 1):
-            return True
-        return False
-    
     # Calculate per-class precision
     precision_per_class = {}
     
     for label in [1, 2, 3, 4, 5]:
-        tp = 0  # True Positives: correct predictions for this label
-        fp = 0  # False Positives: incorrect predictions for this label
+        tp = 0  # True Positives: predicted label AND ground truth is label
+        fp = 0  # False Positives: predicted label BUT ground truth is NOT label
         
         for gScore, pScore_raw in zip(groundTruth, prediction):
             pScore = int(str(pScore_raw)[0])
             
             if pScore == label:
-                if is_correct(gScore, pScore):
+                if gScore == label:
                     tp += 1
                 else:
                     fp += 1
         
-        # Precision for this class
+        # Precision for this class: of all predictions for this label, how many were correct?
         if tp + fp > 0:
             precision_per_class[label] = tp / (tp + fp)
         else:
             precision_per_class[label] = 0.0
     
-    # Return average precision across all classes
+    # Return macro-average precision across all classes
     return sum(precision_per_class.values()) / len(precision_per_class)
 
 def recall_score(groundTruth, prediction):
-    # Helper function to check if prediction is correct (using relaxed matching)
-    def is_correct(gScore, pScore):
-        # Exact matches
-        if gScore == pScore:
-            return True
-        # Relaxed "Positive" Matches
-        if (gScore == 4 and pScore == 5) or (gScore == 5 and pScore == 4):
-            return True
-        # Relaxed "Negative" Matches
-        if (gScore == 1 and pScore == 2) or (gScore == 2 and pScore == 1):
-            return True
-        return False
-    
     # Calculate per-class recall
     recall_per_class = {}
     
     for label in [1, 2, 3, 4, 5]:
-        tp = 0  # True Positives: correct predictions for this label
-        fn = 0  # False Negatives: missed predictions for this label
+        tp = 0  # True Positives: predicted label AND ground truth is label
+        fn = 0  # False Negatives: ground truth is label BUT predicted something else
         
         for gScore, pScore_raw in zip(groundTruth, prediction):
             pScore = int(str(pScore_raw)[0])
             
             if gScore == label:
-                if is_correct(gScore, pScore):
+                if pScore == label:
                     tp += 1
                 else:
                     fn += 1
         
-        # Recall for this class
+        # Recall for this class: of all actual instances of this label, how many did we predict correctly?
         if tp + fn > 0:
             recall_per_class[label] = tp / (tp + fn)
         else:
             recall_per_class[label] = 0.0
     
-    # Return average recall across all classes
+    # Return macro-average recall across all classes
     return sum(recall_per_class.values()) / len(recall_per_class)
